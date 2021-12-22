@@ -6,6 +6,12 @@ This PowerShell script starts multiple processes (netcat listener, malicious LDA
 For educational purposes, this script runs through the entire exploit chain, dynamically creating the Java exploit class and ultimately producing a reverse shell on the web server.
 The poisoned header sent to the vulnerable web application also triggers the information disclosure aspect of the vulnerability. The variable (Java version) can be observed in the LDAP server logs.
 
+## LOG4SHELL THREAT BRIEF
+
+https://medium.com/@alex.fronteddu/log4shell-threat-brief-dd771e831ff9
+
+![log4jattack](https://user-images.githubusercontent.com/6628565/147063652-47c39470-1f53-49c5-806a-0f1ffa1abb7e.png)
+
 ## Proof of Concept
 
 The script Log4jPoC.ps1 automates the exploit locally on a Windows machine.
