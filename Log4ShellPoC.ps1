@@ -292,7 +292,7 @@ try {
     $uar = $_.Exception
 }
 
-Write-Host "SUCCESS: Sent poisoned header to $target`:$ldapPort" -ForegroundColor Green
+Write-Host "SUCCESS: Sent poisoned header to $target" -ForegroundColor Green
 
 Write-Host ''
 Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
