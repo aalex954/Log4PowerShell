@@ -10,6 +10,10 @@ The poisoned header sent to the vulnerable web application also triggers the inf
 
 The script Log4jPoC.ps1 automates the exploit locally on a Windows machine.
 
+### Demo
+
+https://user-images.githubusercontent.com/6628565/147061440-9e3dd81f-cbef-48a5-af93-fd36203a45e4.mp4
+
 ## Requirements
 
 The requirement for Maven may be removed in the future if the pre-compiled LDAP server is included in the project.
