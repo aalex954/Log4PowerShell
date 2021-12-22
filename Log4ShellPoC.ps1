@@ -1,5 +1,5 @@
 Write-Host "Log4Shell (CVE-2021-44228) PoC" -ForegroundColor Green
-Write-Host "https://github.com/aalex954" -ForegroundColor Green
+Write-Host "https://github.com/aalex954/Log4PowerShell" -ForegroundColor Green
 Write-Host ''
 Write-Host "This PowerShell script starts multiple processes (netcat listener, malicious LDAP and HTTP server, and a vulnerable web app hosted from a Docker image.)"
 Write-Host "For educational purposes we will run through the entire exploit chain, dynamically creating the Java exploit class and ultimately producing a reverse shell on the web server."
