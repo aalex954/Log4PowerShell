@@ -104,3 +104,18 @@ Go ahead and type `whoami` to see the effective username of the current user. In
 Notice the log messages displayed in the docker container. You should see messages indicating a connection to a remote server, the netcat listener.
 
 Hopefully this helps clarify how this vulnerability is exploited.
+
+
+## Attribution
+
+### Christophetd - log4shell-vulnerable-app Docker Image
+
+https://github.com/christophetd/log4shell-vulnerable-app
+
+### Marshalsec object deserialization vulnerability project
+
+https://github.com/mbechler/marshalsec
+
+### Log4Shell Image
+
+Lunasec, CC BY-SA 4.0 <https://creativecommons.org/licenses/by-sa/4.0>, via Wikimedia Commons
