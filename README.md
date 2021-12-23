@@ -39,17 +39,29 @@ If all the dependencies are met, this should be it. The script will start spinni
 
 ## About this script
 
-### Dependency check
+### Dependency Check
 
 The script will attempt to check the dependencies.
 If all dependencies are met it will start building the exploit payload (Java reverse shell).
-Once the payload is created we will launch the Docker container:
+
+### Exploit Payload
+
+The payload in this example is a simple java based reverse shell.
+When executed by the vulnerable web server it will establish a connection to our ncat listener.
+I have included a copy of openjdk version `1.8.0_41` specifically to compile the payload for maximum compatibility.
+
+### Docker Target
+
+The next step is to launch the Docker container:
 
 `ghcr.io/christophetd/log4shell-vulnerable-app`
 
+This container hosts a Spring Boot web application using `Log4j 2.14.1` running in a `Java 1.8.0_181` environment.
+The Java version is important since our exploit payload cannot be compiled with a Java version higher than what is installed on the server.
+
 This project can be found here: https://github.com/christophetd/log4shell-vulnerable-app
 
-Thanks!
+Thanks christophetd!
 
 ### LDAP Server
 
@@ -58,7 +70,7 @@ I am using marshalsec's object deserialization vulnerability project which can b
 
 https://github.com/mbechler/marshalsec
 
-Thank you!
+Thank you mbechler!
 
 We really only need the LDAPRefServer.java file but ive included the entire project in this iteration.
 The only modification needed is the listening port:
@@ -67,7 +79,7 @@ The only modification needed is the listening port:
 
 A simple find and replace works.
 
-Lets build the project with Maven 
+Lets build the project with Maven:
 
 `mvn clean package -DskipTests`
 
@@ -111,17 +123,12 @@ Notice the log messages displayed in the docker container. You should see messag
 
 Hopefully this helps clarify how this vulnerability is exploited.
 
-
 ## Attribution
 
-### Christophetd - log4shell-vulnerable-app Docker Image
+_Christophetd - log4shell-vulnerable-app Docker Image_
 
 https://github.com/christophetd/log4shell-vulnerable-app
 
-### Marshalsec object deserialization vulnerability project
+_Marshalsec object deserialization vulnerability project_
 
 https://github.com/mbechler/marshalsec
-
-### Log4Shell Image
-
-Lunasec, CC BY-SA 4.0 <https://creativecommons.org/licenses/by-sa/4.0>, via Wikimedia Commons
