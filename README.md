@@ -35,7 +35,7 @@ For transparency I cloned the repo and built it from source.
 
 `.\Log4ShellPoC.ps1`
 
-If all the dependencies are met, this should be it. The script will start spinning up console windows with everything you need to carry out the attack. Keep your eye on the ncat.exe to see the reverse shell connect.
+When prompted, enter your computers local IP. This is used to configure the listening address of the tools as well as the target address of the vulnerable web app container. If all the dependencies are met, this should be it. The script will start spinning up console windows with everything you need to carry out the attack. Keep your eye on the ncat.exe to see the reverse shell connect.
 
 ## About this script
 
